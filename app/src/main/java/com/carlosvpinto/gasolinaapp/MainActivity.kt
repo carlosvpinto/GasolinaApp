@@ -30,7 +30,11 @@ import android.media.AudioManager
 import android.media.ToneGenerator
 import android.animation.ObjectAnimator
 import android.view.animation.DecelerateInterpolator
+import androidx.lifecycle.lifecycleScope
 import com.carlosvpinto.gasolinaapp.adapters.GasStationAdapter
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 
 
 data class GasStation(
@@ -78,12 +82,14 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
     private lateinit var drawerLayout: DrawerLayout
 
     // Variables Base
-    private val userLat = 38.840000
-    private val userLng = -76.950000
-    private val precioPromedioGobierno = 3.60
+    private val userLat = 34.0200
+    private val userLng = -118.2500
+    private var precioPromedioGobierno = 3.60
 
     // Esta variable ahora cambiará según el auto que elijan
     private var capacidadTanqueGalones = 14.0
+
+    private val API_KEY = "Bearer 14704|VPqejf0Y3WZq7P2cMZOly0rauOOgwnTmHqQExmAJ"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -249,40 +255,104 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
 
         // 2. MARCADOR DEL USUARIO (TU CARRITO)
         val userLocation = LatLng(userLat, userLng)
-        mMap.addMarker(
-            MarkerOptions()
-                .position(userLocation)
-                .title("Tu ubicación actual")
-                .icon(getResizedMapIcon(this, R.drawable.ic_my_car, 100, 70))
-                .rotation(90f)
-                .zIndex(1.0f)
-        )
+        mMap.addMarker(MarkerOptions().position(userLocation).title("Tu ubicación actual").icon(getResizedMapIcon(this, R.drawable.ic_my_car, 100, 70)).rotation(90f).zIndex(1.0f))
         mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(userLocation, 14f))
 
-        // 3. NUESTRA LISTA DE GASOLINERAS
-        val listaGasolineras = listOf(
-            GasStation("1", "Exxon - Temple Hills", 38.847320, -76.953035, 3.15),
-            GasStation("2", "Shell - Branch Ave", 38.835000, -76.948000, 3.50),
-            GasStation("3", "Chevron - I-495", 38.842000, -76.965000, 3.80),
-            GasStation("4", "Mobil - Allentown Rd", 38.830000, -76.955000, 3.10)
-        )
+        mMap.setOnMapClickListener { bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN }
 
-        // 4. CALCULAR DISTANCIAS ANTES DE MOSTRARLAS EN LA LISTA
+        // =========================================================
+        // ¡MAGIA! EN LUGAR DE DATOS FALSOS, LLAMAMOS A INTERNET
+        // =========================================================
+        Toast.makeText(this, "Buscando gasolineras reales...", Toast.LENGTH_SHORT).show()
+
+        // Enviamos el ZIP 20746 (Temple Hills) porque coincide con las coordenadas GPS donde pusimos tu carrito
+        // Enviamos el ZIP 90001 (Los Ángeles) para la prueba inicial
+        buscarGasolinerasEnAPI("90001")
+    }
+
+    private fun buscarGasolinerasEnAPI(zipCode: String) {
+        lifecycleScope.launch(Dispatchers.IO) {
+            try {
+                android.util.Log.i("APP_GASOLINA", "1. Buscando en API con ZIP: $zipCode")
+                val responsePrecios = RetrofitClient.apiService.getPricesByZip(API_KEY, zipCode)
+
+                if (responsePrecios.isSuccessful && responsePrecios.body() != null) {
+                    val body = responsePrecios.body()!!
+
+                    if (body.status == "success" && body.gas_prices != null && body.gas_prices.isNotEmpty()) {
+
+                        val resultados = body.gas_prices
+                        val gasolinerasReales = mutableListOf<GasStation>()
+
+                        // Log del Promedio Real
+                        val primerItem = resultados[0]
+                        if (primerItem.average != null) {
+                            val promedioLimpio = primerItem.average.replace("$", "").toDoubleOrNull()
+                            if (promedioLimpio != null) {
+                                precioPromedioGobierno = promedioLimpio
+                                android.util.Log.i("APP_GASOLINA", "2. PROMEDIO DE LA ZONA GUARDADO: $$precioPromedioGobierno")
+                            }
+                        }
+
+                        android.util.Log.i("APP_GASOLINA", "3. Procesando estaciones...")
+                        for (item in resultados.drop(1).take(5)) {
+                            if (item.station_id != null && item.price != null && item.station != null) {
+
+                                val precioLimpio = item.price.replace("$", "").toDoubleOrNull() ?: 0.0
+
+                                val responseEstacion = RetrofitClient.apiService.getStationData(API_KEY, item.station_id)
+
+                                if (responseEstacion.isSuccessful && responseEstacion.body() != null) {
+                                    val datosEstacion = responseEstacion.body()!!.data
+
+                                    if (datosEstacion?.coordinates != null) {
+                                        val latReal = datosEstacion.coordinates.lat.toDoubleOrNull() ?: 0.0
+                                        val lngReal = datosEstacion.coordinates.lng.toDoubleOrNull() ?: 0.0
+
+                                        gasolinerasReales.add(
+                                            GasStation(datosEstacion.station_id, item.station, latReal, lngReal, precioLimpio)
+                                        )
+                                        android.util.Log.d("APP_GASOLINA", "   -> Agregada: ${item.station} | Precio: $$precioLimpio | GPS: $latReal, $lngReal")
+                                    }
+                                }
+                            }
+                        }
+
+                        withContext(Dispatchers.Main) {
+                            if (gasolinerasReales.isNotEmpty()) {
+                                android.util.Log.i("APP_GASOLINA", "4. Enviando ${gasolinerasReales.size} estaciones al mapa.")
+                                procesarYDibujarMapa(gasolinerasReales)
+                            } else {
+                                Toast.makeText(this@MainActivity, "Estaciones sin GPS", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                android.util.Log.e("APP_GASOLINA", "Error de conexión: ${e.message}")
+            }
+        }
+    }
+
+    // --- FUNCIÓN PARA PROCESAR LOS DATOS (El código que tenías antes en onMapReady) ---
+    private fun procesarYDibujarMapa(listaGasolineras: List<GasStation>) {
+        // Calcular distancias
         for (station in listaGasolineras) {
             val results = FloatArray(1)
             Location.distanceBetween(userLat, userLng, station.lat, station.lng, results)
             station.distanceKm = results[0] / 1000.0
         }
 
-        // 5. ORDENAR DE LA MÁS BARATA A LA MÁS CARA
+        // Ordenar
         gasolinerasOrdenadas = listaGasolineras.sortedBy { it.price }
 
-        // 6. DIBUJAR PINES EN EL MAPA CON SUS RANKINGS
+        // Dibujar en Mapa
+        android.util.Log.i("APP_GASOLINA", "5. LISTA ORDENADA (Top 3):")
         for ((index, station) in gasolinerasOrdenadas.withIndex()) {
+            android.util.Log.i("APP_GASOLINA", "   #${index + 1} - ${station.name} | $${station.price} | a ${String.format("%.1f", station.distanceKm)} km")
             val rankingReal = index + 1
             val stationLocation = LatLng(station.lat, station.lng)
 
-            // Lógica Mágica de Logos (Usando tus propios nombres exxon_2, shell_2, etc.)
             val nombreMinuscula = station.name.lowercase()
             val iconoSeleccionado = when {
                 nombreMinuscula.contains("exxon") -> R.drawable.exxon_2
@@ -293,61 +363,40 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
             }
 
             val marker = mMap.addMarker(
-                MarkerOptions()
-                    .position(stationLocation)
-                    .title(station.name)
+                MarkerOptions().position(stationLocation).title(station.name)
                     .icon(createMarkerWithRanking(this, iconoSeleccionado, rankingReal))
                     .zIndex(100f - rankingReal)
             )
             marker?.tag = station
         }
 
-        // 7. CONFIGURAR LA LISTA (RECYCLERVIEW) INFERIOR
+        // Configurar la Lista (RecyclerView)
         val rvGasStations = findViewById<androidx.recyclerview.widget.RecyclerView>(R.id.rvGasStations)
         rvGasStations.layoutManager = androidx.recyclerview.widget.LinearLayoutManager(this)
 
         adapter = GasStationAdapter(gasolinerasOrdenadas, capacidadTanqueGalones, precioPromedioGobierno) { clickedStation ->
-            // ¿Qué pasa al tocar una tarjeta en la lista inferior?
-            mostrarDetallesEstacion(clickedStation) // Actualiza el simulador arriba
-
-            // Centramos el mapa en la estación tocada suavemente
+            mostrarDetallesEstacion(clickedStation)
             mMap.animateCamera(CameraUpdateFactory.newLatLng(LatLng(clickedStation.lat, clickedStation.lng)))
         }
         rvGasStations.adapter = adapter
 
-        // 8. EVENTOS DE CLIC EN LOS PINES DEL MAPA
+        // Eventos del Mapa
         mMap.setOnMarkerClickListener { clickedMarker ->
             if (clickedMarker.title == "Tu ubicación actual") return@setOnMarkerClickListener false
 
             val stationData = clickedMarker.tag as GasStation
             mostrarDetallesEstacion(stationData)
 
-            // Sincronizar la lista para que se marque en verde la tarjeta correcta
             val posicionEnLista = gasolinerasOrdenadas.indexOf(stationData)
             if (posicionEnLista != -1) {
                 val oldPos = adapter.selectedPosition
                 adapter.selectedPosition = posicionEnLista
                 adapter.notifyItemChanged(oldPos)
                 adapter.notifyItemChanged(adapter.selectedPosition)
-                // Hacer scroll automático en la lista hacia el elemento tocado
                 rvGasStations.smoothScrollToPosition(adapter.selectedPosition)
             }
             true
         }
-
-        // 9. EVENTOS DEL MAPA (Tocar un espacio vacío)
-        mMap.setOnMapClickListener {
-            // Bajamos el panel para dejar ver el mapa, pero no lo ocultamos del todo
-            // para que el usuario siempre sepa que la lista sigue ahí abajo
-            //bottomSheetBehavior.state = BottomSheetBehavior.STATE_COLLAPSED
-            // Cuando toque el mapa, el panel se esconde por completo de nuevo
-            bottomSheetBehavior.state = BottomSheetBehavior.STATE_HIDDEN
-        }
-
-        // 10. Seleccionar la más barata por defecto al abrir la app
-//        if (gasolinerasOrdenadas.isNotEmpty()) {
-//            mostrarDetallesEstacion(gasolinerasOrdenadas[0])
-//        }
     }
 
     private fun mostrarDetallesEstacion(station: GasStation) {
@@ -447,6 +496,7 @@ class MainActivity : AppCompatActivity(), OnMapReadyCallback {
         val tvPorcentajeTanque = findViewById<TextView>(R.id.tvPorcentajeTanque)
         val sliderTank = findViewById<com.google.android.material.slider.Slider>(R.id.sliderTank)
 
+        android.util.Log.d("APP_GASOLINA", "6. SIMULADOR: Tanque $galonesALlenar Gal | Ahorro/Gal: $$ahorroPorGalon | TOTAL NETO: $$ahorroTotal")
         // 1. Calculamos el porcentaje
         val porcentaje = if (capacidadTanqueGalones > 0) {
             ((galonesALlenar / capacidadTanqueGalones) * 100).toInt()
