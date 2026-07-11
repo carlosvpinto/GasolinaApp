@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Primer Grupo -->
+    <group android:id="@+id/group_general">
+        <item
+            android:id="@+id/nav_about"
+            android:title="Acerca de la App" />
+    </group>
+
+    <!-- Segundo Grupo (Al tener un ID distinto, Android dibujará una raya arriba) -->
+    <group android:id="@+id/group_settings">
+        <item
+            android:id="@+id/nav_car"
+            android:title="Configurar mi Vehículo" />
+    </group>
+
+</menu>

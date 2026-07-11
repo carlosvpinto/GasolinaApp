@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<shape xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Color de fondo del panel (Azul noche / Slate oscuro estilo Tailwind) -->
+    <solid android:color="#1E293B" />
+
+    <!-- Esquinas redondeadas SOLO en la parte superior -->
+    <corners
+        android:topLeftRadius="28dp"
+        android:topRightRadius="28dp" />
+
+</shape>

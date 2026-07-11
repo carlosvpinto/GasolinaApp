@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Colores Base de la Marca -->
+    <color name="mobil_red">#E31837</color>
+    <color name="mobil_dark_red">#B7122A</color> <!-- Para la barra de estado de arriba del celular -->
+    <color name="mobil_blue">#003DA5</color>
+
+    <!-- Colores para Textos y Fondos -->
+    <color name="white">#FFFFFF</color>
+    <color name="text_primary">#212121</color>
+    <color name="text_secondary">#757575</color>
+
+    <!-- Colores Semánticos (Ahorro/Peligro) -->
+    <color name="savings_green">#388E3C</color>
+    <color name="expensive_red">#D32F2F</color>
+</resources>

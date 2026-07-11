@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- CAPA 1: FONDO DEL TANQUE (Oscuro con efecto de profundidad) -->
+    <item android:id="@android:id/background">
+        <shape android:shape="rectangle">
+            <corners android:radius="100dp"/> <!-- Bordes redondos de cápsula -->
+            <solid android:color="#141414"/> <!-- Negro mate -->
+            <stroke android:width="2dp" android:color="#2C2C2C"/> <!-- Borde metálico sutil -->
+        </shape>
+    </item>
+
+    <!-- CAPA 2: EL COMBUSTIBLE (Gradiente de Naranja a Amarillo Brillante) -->
+    <item android:id="@android:id/progress">
+        <clip android:clipOrientation="vertical" android:gravity="bottom">
+            <shape android:shape="rectangle">
+                <corners android:radius="100dp"/>
+                <gradient
+                    android:startColor="#FF8F00"
+                    android:centerColor="#FFB300"
+                    android:endColor="#FFE082"
+                    android:angle="90"/> <!-- El color se hace más brillante hacia arriba -->
+            </shape>
+        </clip>
+    </item>
+
+    <!-- CAPA 3: EFECTO CRISTAL 3D (Un reflejo curvo superpuesto) -->
+    <item>
+        <shape android:shape="rectangle">
+            <corners android:radius="100dp"/>
+            <gradient
+                android:startColor="#2AFFFFFF"
+                android:centerColor="#00FFFFFF"
+                android:endColor="#0AFFFFFF"
+                android:angle="0"/> <!-- Brillo blanco a la izquierda que se desvanece -->
+        </shape>
+    </item>
+
+</layer-list>

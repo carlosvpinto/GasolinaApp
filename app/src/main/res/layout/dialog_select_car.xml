@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:padding="24dp">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Configura tu ículo"
+        android:textSize="20sp"
+        android:textStyle="bold"
+
+        android:layout_marginBottom="16dp" />
+
+    <!-- Título para la Marca -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="1. Selecciona la Marca"
+         />
+
+    <!-- Desplegable de Marcas -->
+    <Spinner
+        android:id="@+id/spinnerBrand"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp"
+         />
+
+    <!-- Título para el Modelo -->
+    <TextView
+        android:id="@+id/tvModelTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="2. Selecciona el Modelo"
+        />
+
+    <!-- Desplegable de Modelos -->
+    <Spinner
+        android:id="@+id/spinnerModel"
+        android:layout_width="match_parent"
+        android:layout_height="48dp"
+        android:layout_marginTop="4dp"
+        android:layout_marginBottom="16dp"
+         />
+
+    <!-- ESTO ESTARÁ OCULTO: Solo aparece si eligen "Otro/Personalizado" -->
+    <TextView
+        android:id="@+id/tvCustomHint"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Ingresa la capacidad en Galones:"
+
+        android:visibility="gone" />
+
+    <EditText
+        android:id="@+id/etCustomCapacity"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:inputType="numberDecimal"
+        android:hint="Ejemplo: 45"
+        android:visibility="gone" />
+
+</LinearLayout>

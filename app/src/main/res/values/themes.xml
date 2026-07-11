@@ -1,0 +1,19 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- El nombre del Theme puede variar según como llamaste a tu app, asegúrate de mantener tu nombre actual -->
+    <style name="Theme.GasolinaApp" parent="Theme.MaterialComponents.Light.NoActionBar">
+
+        <!-- Color Principal (Barras superiores, cabeceras) -->
+        <item name="colorPrimary">@color/mobil_red</item>
+        <item name="colorPrimaryVariant">@color/mobil_dark_red</item>
+        <item name="colorOnPrimary">@color/white</item>
+
+        <!-- Color Secundario (Botones de acción, íconos de menú) -->
+        <item name="colorSecondary">@color/mobil_blue</item>
+        <item name="colorSecondaryVariant">@color/mobil_blue</item>
+        <item name="colorOnSecondary">@color/white</item>
+
+        <!-- Color de la barrita de batería y señal del celular -->
+        <item name="android:statusBarColor">?attr/colorPrimaryVariant</item>
+
+    </style>
+</resources>
