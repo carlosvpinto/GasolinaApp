@@ -45,24 +45,163 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal"
                 android:paddingHorizontal="12dp"
-                android:paddingVertical="8dp"
+                android:paddingVertical="4dp"
                 android:gravity="center_vertical">
 
-                <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/bg_circle" android:backgroundTint="#388E3C"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:layout_marginEnd="12dp" android:text="@string/m_s_economica" android:textSize="12sp" android:textStyle="bold" android:textColor="#333333"/>
+                <!-- 1. BOTÓN VERDE (Más Económica) -->
+                <LinearLayout
+                    android:id="@+id/btnLeyendaVerde"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp"> <!-- Padding interno para facilitar el clic con el dedo -->
 
-                <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/bg_circle" android:backgroundTint="#FFB300"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:layout_marginEnd="12dp" android:text="@string/Intermedio" android:textSize="12sp" android:textColor="#333333"/>
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/bg_circle" android:backgroundTint="#388E3C"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:text="@string/m_s_economica" android:textSize="12sp" android:textStyle="bold" android:textColor="#333333"/>
+                </LinearLayout>
 
-                <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/bg_circle" android:backgroundTint="#E31837"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="@string/mas_alta" android:textSize="12sp" android:textColor="#333333"/>
+                <!-- 2. BOTÓN AMARILLO (Intermedio) -->
+                <LinearLayout
+                    android:id="@+id/btnLeyendaAmarillo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp">
+
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/bg_circle" android:backgroundTint="#FFB300"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:layout_marginEnd="8dp" android:text="@string/Intermedio" android:textSize="12sp" android:textColor="#333333"/>
+                </LinearLayout>
+
+                <!-- 3. BOTÓN ROJO (Más Costosa) -->
+                <LinearLayout
+                    android:id="@+id/btnLeyendaRojo"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:padding="4dp">
+
+                    <View android:layout_width="12dp" android:layout_height="12dp" android:background="@drawable/bg_circle" android:backgroundTint="#E31837"/>
+                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:layout_marginStart="6dp" android:text="@string/mas_alta" android:textSize="12sp" android:textColor="#333333"/>
+                </LinearLayout>
             </LinearLayout>
         </androidx.cardview.widget.CardView>
+
+        <!-- ... (Aquí está tu código de la Leyenda Flotante) ... -->
+
+        <!-- NUEVO: BOTÓN FLOTANTE DE REFRESCAR -->
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/fabRefresh"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="bottom|end"
+            android:layout_marginEnd="16dp"
+            android:layout_marginBottom="110dp"
+        android:src="@android:drawable/ic_popup_sync"
+        app:backgroundTint="?attr/colorPrimary"
+        app:tint="#FFFFFF"
+        app:elevation="6dp" />
 
         <!-- 4. EL BOTTOM SHEET (Llamado desde el otro archivo) -->
         <include layout="@layout/layout_bottom_sheet" />
 
+        <!-- ============================================== -->
+        <!-- 1. PANTALLA DE ESTADO VACÍO (No hay estaciones)-->
+        <!-- ============================================== -->
+        <androidx.cardview.widget.CardView
+            android:id="@+id/cardEmptyState"
+            android:layout_width="300dp"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone"
+            app:cardBackgroundColor="#1E293B"
+            app:cardCornerRadius="24dp"
+            app:cardElevation="20dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="center"
+                android:orientation="vertical"
+                android:padding="24dp">
+
+                <ImageView
+                    android:layout_width="64dp"
+                    android:layout_height="64dp"
+                    android:src="@drawable/gasolina_1"
+                    app:tint="#64748B" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="16dp"
+                    android:text="Sin Resultados"
+                    android:textColor="#F8FAFC"
+                    android:textSize="20sp"
+                    android:textStyle="bold" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:gravity="center"
+                    android:text="No encontramos estaciones con GPS en este código postal."
+                    android:textColor="#94A3B8"
+                    android:textSize="14sp" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/btnRetryEmpty"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="20dp"
+                    android:text="VOLVER A BUSCAR"
+                    app:backgroundTint="?attr/colorPrimary"
+                    app:cornerRadius="12dp" />
+            </LinearLayout>
+        </androidx.cardview.widget.CardView>
+
+        <!-- ============================================== -->
+        <!-- 2. PANTALLA DE CARGA (Fondo oscuro y Spinner)  -->
+        <!-- ============================================== -->
+        <LinearLayout
+            android:id="@+id/loadingOverlay"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="#B3000000"
+        android:clickable="true"
+        android:elevation="30dp"
+        android:focusable="true"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:visibility="gone">
+
+        <!-- Círculo de carga moderno -->
+        <ProgressBar
+            android:layout_width="60dp"
+            android:layout_height="60dp"
+            android:indeterminateTint="?attr/colorPrimary" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:text="Buscando los mejores precios..."
+            android:textColor="#FFFFFF"
+            android:textSize="16sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
     </androidx.coordinatorlayout.widget.CoordinatorLayout>
+
+
 
     <!-- 5. EL MENÚ LATERAL -->
     <com.google.android.material.navigation.NavigationView
